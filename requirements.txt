@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn>=0.29
+opencv-python-headless>=4.9,<5
+numpy>=1.26
+# Only needed when you load a trained detection model (VEYTRIX_MODEL):
+# ultralytics>=8.3

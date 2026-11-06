@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+data/
+outbox/
+media/
+cameras.json
+models/*.pt
+*.mp4
+*.jpg
+.venv/

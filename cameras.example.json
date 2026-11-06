@@ -1,0 +1,4 @@
+[
+  {"id": "cam-1", "name": "Camera 1", "place": "Market Road", "source": 0},
+  {"id": "cam-2", "name": "Camera 2", "place": "Station Road", "source": "rtsp://user:pass@192.168.1.20:554/stream1"}
+]
