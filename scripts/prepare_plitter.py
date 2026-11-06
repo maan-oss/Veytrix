@@ -11,6 +11,24 @@ import json
 import zipfile
 from pathlib import Path
 
+import cv2
+import numpy as np
+
+_FACE = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+
+def blur_faces(img):
+    """Blur every detected face (20% padding) before the image is written. Required by Veytrix privacy rules."""
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    for (x, y, w, h) in _FACE.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(24, 24)):
+        pad_w, pad_h = int(w * 0.2), int(h * 0.2)
+        x1, y1 = max(0, x - pad_w), max(0, y - pad_h)
+        x2, y2 = min(img.shape[1], x + w + pad_w), min(img.shape[0], y + h + pad_h)
+        roi = img[y1:y2, x1:x2]
+        k = max(3, (min(roi.shape[:2]) // 3) | 1)
+        img[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (k, k), 0)
+    return img
+
 SPLITS = {"train": "annotations_train.json", "val": "annotations_val.json", "test": "annotations_test.json"}
 
 
@@ -65,8 +83,12 @@ def main():
         for member in img_zip.namelist():
             base = Path(member).name
             if base in wanted and not member.endswith("/"):
-                with img_zip.open(member) as src, open(img_dir / base, "wb") as dst:
-                    dst.write(src.read())
+                raw = np.frombuffer(img_zip.read(member), dtype=np.uint8)
+                img = cv2.imdecode(raw, cv2.IMREAD_COLOR)
+                if img is None:
+                    continue
+                img = blur_faces(img)
+                cv2.imwrite(str(img_dir / base), img, [cv2.IMWRITE_JPEG_QUALITY, 92])
                 extracted += 1
         print(f"{split}: images {extracted}/{len(coco['images'])}, boxes {boxes}")
 
